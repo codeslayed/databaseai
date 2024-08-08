@@ -61,8 +61,7 @@ cryptography</code></pre>
 </ul>
 
 <h2 id="project-showcase">Project Showcase</h2>
-<p>You can view the full project on my GitHub: <a href="https://github.com/yourusername/Document-Querying-Application">LINK</a></p>
-<p>For a detailed example of the code in action, check out the attached Jupyter Notebook: <a href="https://github.com/yourusername/Document-Querying-Application/blob/main/example_notebook.ipynb">example_notebook.ipynb</a></p>
+<p>You can view the full project on my GitHub: <a href="https://github.com/coodeslayed/dataabaseai">LINK</a></p>
 
 </body>
 </html>
