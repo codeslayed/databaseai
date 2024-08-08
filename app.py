@@ -1,44 +1,69 @@
+# app.py
 import streamlit as st
-from database import create_table, insert_chat, fetch_chat_history
-from utils import format_chat_history
+import os
+from database import create_table, insert_document, fetch_documents, insert_user_history, fetch_user_history
+from utils import process_document
 
 # Initialize the database
 create_table()
 
-# Streamlit application
-st.title("Document Query Application")
+# Streamlit UI
+st.title("Document Querying Application")
 
-# User input
+# User ID input
 user_id = st.text_input("Enter your User ID:")
-question = st.text_area("Ask your question:")
 
-if st.button("Submit"):
-    # Here, you would integrate your document querying logic
-    # For demonstration, we'll use a dummy answer
-    answer = "This is a dummy answer to your question."
+# Upload documents
+uploaded_files = st.file_uploader("Upload documents (.pdf, .docx, .txt)", type=['pdf', 'docx', 'txt'], accept_multiple_files=True)
 
-    # Store the chat in the database
-    insert_chat(user_id, question, answer)
-    st.success("Your question has been submitted!")
+if st.button("Upload"):
+    for uploaded_file in uploaded_files:
+        file_path = os.path.join("documents", uploaded_file.name)
+        with open(file_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        
+        # Process and store the document content
+        content = process_document(file_path)
+        insert_document(uploaded_file.name, content)
+        st.success(f"Uploaded and processed {uploaded_file.name}")
 
-# Display chat history
+# Querying documents
+query = st.text_input("Enter your query:")
+if st.button("Search"):
+    documents = fetch_documents()
+    responses = []
+    for doc in documents:
+        if query.lower() in doc[2].lower():  # Check if query is in document content
+            responses.append(f"Found in {doc[1]}")
+
+    if responses:
+        response_text = "\n".join(responses)
+        st.write("Results:")
+        st.write(response_text)
+        insert_user_history(user_id, query, response_text)
+    else:
+        st.write("No results found.")
+
+# Display user history
 if user_id:
-    st.subheader("Chat History")
-    chat_history = fetch_chat_history(user_id)
-    if chat_history:
-        for question, answer, timestamp in chat_history:
-            st.write(f"**Q:** {question}")
-            st.write(f"**A:** {answer}")
-            st.write(f"**Timestamp:** {timestamp}")
+    st.subheader("Your Query History")
+    history = fetch_user_history(user_id)
+    if history:
+        for record in history:
+            st.write(f"**Query:** {record[0]}")
+            st.write(f"**Response:** {record[1]}")
+            st.write(f"**Timestamp:** {record[2]}")
             st.write("---")
     else:
-        st.write("No chat history found.")
+        st.write("No query history found.")
 
 # Download chat history
 if st.button("Download Chat History"):
-    chat_history = fetch_chat_history(user_id)
-    if chat_history:
-        csv = format_chat_history(chat_history)
-        st.download_button("Download CSV", csv, "chat_history.csv", "text/csv")
+    history = fetch_user_history(user_id)
+    if history:
+        with open(f"{user_id}_chat_history.txt", "w") as f:
+            for record in history:
+                f.write(f"Query: {record[0]}\nResponse: {record[1]}\nTimestamp: {record[2]}\n\n")
+        st.success("Chat history downloaded.")
     else:
         st.warning("No chat history to download.")
