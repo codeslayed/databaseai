@@ -1,22 +1,5 @@
-# database.py
 import sqlite3
 import os
-from cryptography.fernet import Fernet
-
-# Generate a key for encryption
-def generate_key():
-    return Fernet.generate_key()
-
-# Load or create a key
-def load_key():
-    if os.path.exists("secret.key"):
-        with open("secret.key", "rb") as key_file:
-            return key_file.read()
-    else:
-        key = generate_key()
-        with open("secret.key", "wb") as key_file:
-            key_file.write(key)
-        return key
 
 # Connect to the database
 def create_connection():
